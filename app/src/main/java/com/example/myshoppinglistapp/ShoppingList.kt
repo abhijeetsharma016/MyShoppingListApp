@@ -19,7 +19,6 @@ import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.OutlinedTextField
@@ -32,17 +31,16 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.modifier.modifierLocalMapOf
 import androidx.compose.ui.unit.dp
 
-data class ShoppingIteam (val id:Int,
-                          var name:String,
-                          var quantity:Int,
-                          var isEditing: Boolean = false
+data class ShoppingItem (val id:Int,
+                         var name:String,
+                         var quantity:Int,
+                         var isEditing: Boolean = false
 )
 @Composable
 fun ShoppingListApp(){
-    var sItem by remember { mutableStateOf(listOf<ShoppingIteam>()) }
+    var sItem by remember { mutableStateOf(listOf<ShoppingItem>()) }
     var showDialog by remember { mutableStateOf(false) }
     var itemName by remember { mutableStateOf("") }
     var itemQuentity by remember { mutableStateOf("") }
@@ -56,7 +54,7 @@ fun ShoppingListApp(){
         Button(onClick = {showDialog = true},
             modifier = Modifier.align(Alignment.CenterHorizontally)
         ){
-            Text(text = "Add Iteam")
+            Text(text = "Add Item")
         }
         LazyColumn(
             modifier = Modifier
@@ -64,7 +62,25 @@ fun ShoppingListApp(){
                 .padding(16.dp)
         ){
             items(sItem){
-                shoppingItem(it, {}, {})
+                item ->  //item = it
+                if(item.isEditing){
+                    shoppingItemEditor(item = item, OnEditComplete = {
+                        editName, editQuality ->
+                        sItem = sItem.map{it.copy(isEditing = false)}
+                        val editedItem = sItem.find { it.id == item.id }
+                        editedItem?.let {
+                            it.name = editName
+                            it.quantity = editQuality
+                        }
+                    })
+                }
+                else{
+                    shoppingListItem(item = item, onEditClick = {
+                        //finding out which item we are editing and changing its "isEditing boolean to true"
+                        sItem = sItem.map{it.copy(isEditing = it.id == item.id)}
+                    },
+                        onDeleteClick = {sItem = sItem - item})
+                }
             }
         }
     }
@@ -77,13 +93,13 @@ fun ShoppingListApp(){
                                 horizontalArrangement = Arrangement.SpaceBetween) {
                                 Button(onClick = {
                                     if(itemName.isNotBlank()){
-                                        val newIteam = ShoppingIteam(
-                                            id = sItem.size+1,          //Size Of the iteam list
+                                        val newItem = ShoppingItem(
+                                            id = sItem.size+1,          //Size Of the item list
                                             name = itemName,
                                             quantity = itemQuentity.toInt()
 
                                         )
-                                        sItem = sItem+ newIteam
+                                        sItem = sItem+ newItem
                                         showDialog = false
                                         itemName = ""
                                     }
@@ -118,7 +134,7 @@ fun ShoppingListApp(){
     }
 
 @Composable
-fun ShoppingItemEditor(item:ShoppingIteam, OnEditComplete:(String, Int)->Unit){
+fun shoppingItemEditor(item:ShoppingItem, OnEditComplete:(String, Int)->Unit){
     var editName by remember { mutableStateOf(item.name) }
     var editQuality by remember { mutableStateOf(item.quantity.toString()) }
     var isEditing by remember { mutableStateOf(item.isEditing) }
@@ -146,15 +162,15 @@ fun ShoppingItemEditor(item:ShoppingIteam, OnEditComplete:(String, Int)->Unit){
             isEditing = false
             OnEditComplete(editName, editQuality.toIntOrNull()?:1)
         }) {
-
+            Text("Save")
         }
     }
 }
 
 @Composable
-fun shoppingItem(iteam: ShoppingIteam,
-                  onEditClick:()->Unit,
-                  onDeleteClick:()->Unit,
+fun shoppingListItem(item: ShoppingItem,
+                     onEditClick:()->Unit,
+                     onDeleteClick:()->Unit,
                   ){
     Row (modifier = Modifier
         .padding(8.dp)
@@ -162,9 +178,10 @@ fun shoppingItem(iteam: ShoppingIteam,
         .border(
             border = BorderStroke(2.dp, Color(0XFF018786)),
             shape = RoundedCornerShape(20)
-        )){
-        Text(text = iteam.name, modifier = Modifier.padding(8.dp))
-        Text(text = "Qty: ${iteam.quantity}", modifier = Modifier.padding(8.dp))
+        ),
+        horizontalArrangement = Arrangement.SpaceBetween){
+        Text(text = item.name, modifier = Modifier.padding(8.dp))
+        Text(text = "Qty: ${item.quantity}", modifier = Modifier.padding(8.dp))
         Row(modifier = Modifier.padding((8.dp))) {
             IconButton(onClick = onEditClick) {
                 Icon(imageVector = Icons.Default.Edit, contentDescription = null)
