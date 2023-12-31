@@ -1,13 +1,13 @@
 Shopping List Android App
-A modern Android shopping list app built with Jetpack Compose, offering a streamlined user experience. Manage your shopping items effortlessly, leveraging key technologies and libraries.
+Welcome to our Shopping List Android App! This modern application, built with Jetpack Compose, provides a seamless user experience for efficiently managing your shopping items. Explore the key features and technologies integrated into the app.
 
 Features
-Add, Edit, Delete: Seamlessly manage your shopping list.
-Google Maps Integration: Utilizes Google Maps API for enhanced location features.
-Navigation: Powered by Navigation Compose for smooth app navigation.
-ViewModel: Leverages Compose ViewModel for efficient state management.
-Network Calls: Integrates Retrofit (2.9.0) for seamless network communication.
-JSON Mapping: Uses Converter Gson (2.9.0) for efficient JSON to Kotlin object mapping.
+Effortless Management: Add, edit, and delete items effortlessly.
+Google Maps Integration: Utilize Google Maps API for enhanced location features.
+Smooth Navigation: Navigate seamlessly with Navigation Compose.
+State Management: Leverage Compose ViewModel for efficient state management.
+Network Communication: Use Retrofit (2.9.0) for seamless network calls.
+JSON to Kotlin Mapping: Employ Converter Gson (2.9.0) for efficient JSON mapping.
 Tech Stack
 Jetpack Compose: Modern Android UI toolkit.
 Google Maps API: Enhance location features.
