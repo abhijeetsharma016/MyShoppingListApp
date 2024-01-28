@@ -102,6 +102,7 @@ fun ShoppingListApp(){
                                         sItem = sItem+ newItem
                                         showDialog = false
                                         itemName = ""
+                                        itemQuentity = ""
                                     }
                                 }) {
                                     Text("Add")
