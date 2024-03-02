@@ -1,5 +1,6 @@
 package com.example.shoppinglistapp
 
+import android.content.Context
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
@@ -14,6 +15,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Icon
@@ -30,17 +32,26 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.ViewModel
+import androidx.navigation.NavController
 
 data class ShoppingItem(
     val id: Int,
     val name: String,
     val quantity: Int,
-    var isEditing: Boolean = false
+    var isEditing: Boolean = false,
+    var address: String = ""
 )
 
 @Composable
-fun ShoppingListApp() {
-    var sItems by remember{ mutableStateOf(listOf<ShoppingItem>()) }
+fun ShoppingListApp(
+    locationUtils: LocationUtils,
+    viewModel: ViewModel,
+    navController: NavController,
+    context: Context,
+    address: String
+) {
+    var sItems by remember { mutableStateOf(listOf<ShoppingItem>()) }
     var showDialog by remember { mutableStateOf(false) }
     var itemName by remember { mutableStateOf("") }
     var itemQuantity by remember { mutableStateOf("") }
@@ -55,26 +66,30 @@ fun ShoppingListApp() {
         ) {
             Text("Add Item")
         }
-        LazyColumn(modifier = Modifier
-            .fillMaxSize()
-            .padding(16.dp)) {
-            items(sItems){
+        LazyColumn(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(16.dp)
+        ) {
+            items(sItems) {
                 ShoppingListItem(it, {}, {})
             }
         }
     }
 
     if (showDialog) {
-        AlertDialog(onDismissRequest = { showDialog=false },
+        AlertDialog(onDismissRequest = { showDialog = false },
             confirmButton = {
-                Row(modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(8.dp),
-                    horizontalArrangement = Arrangement.SpaceBetween){
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(8.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
                     Button(onClick = {
-                        if(itemName.isNotBlank()){
+                        if (itemName.isNotBlank()) {
                             val newItem = ShoppingItem(
-                                id= sItems.size+1,
+                                id = sItems.size + 1,
                                 name = itemName,
                                 quantity = itemQuantity.toInt()
                             )
@@ -82,16 +97,16 @@ fun ShoppingListApp() {
                             showDialog = false
                             itemName = ""
                         }
-                    }){
+                    }) {
                         Text("Add")
                     }
-                    Button(onClick = {showDialog = false}){
+                    Button(onClick = { showDialog = false }) {
                         Text("Cancel")
                     }
                 }
 
             },
-            title = { Text("Add Shopping Item")},
+            title = { Text("Add Shopping Item") },
             text = {
                 Column {
                     OutlinedTextField(
@@ -132,8 +147,24 @@ fun ShoppingListItem(
                 shape = RoundedCornerShape(20)
             )
     ){
-        Text(text = item.name, modifier = Modifier.padding(8.dp))
-        Text(text = "Qty: ${item.quantity}", modifier = Modifier.padding(8.dp))
+        Column(modifier = Modifier
+            .weight(1f)
+            .padding(8.dp)) {
+            Row {
+                Text(text = item.name, modifier = Modifier.padding(8.dp))
+                Text(text = "Qty: ${item.quantity}", modifier = Modifier.padding(8.dp))
+            }
+            Row(modifier = Modifier.fillMaxWidth()) {
+                Icon(imageVector = Icons.Default.LocationOn, contentDescription = null)
+                Text(text= item.address)
+            }
+        }
+
+
+
+
+
+
         Row(modifier = Modifier.padding(8.dp)){
             IconButton(onClick = onEditClick){
                 Icon(imageVector = Icons.Default.Edit, contentDescription = null)
