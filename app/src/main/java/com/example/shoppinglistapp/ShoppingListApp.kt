@@ -6,6 +6,7 @@ import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -13,9 +14,11 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
@@ -40,12 +43,11 @@ import androidx.core.app.ActivityCompat
 import androidx.lifecycle.ViewModel
 import androidx.navigation.NavController
 
-data class ShoppingItem(
-    val id: Int,
-    val name: String,
-    val quantity: Int,
-    var isEditing: Boolean = false,
-    var address: String = ""
+data class ShoppingItem(val id:Int,
+                        var name: String,
+                        var quantity:Int,
+                        var isEditing: Boolean = false,
+                        var address: String = ""
 )
 
 @Composable
@@ -55,13 +57,11 @@ fun ShoppingListApp(
     navController: NavController,
     context: Context,
     address: String
-) {
-    var sItems by remember { mutableStateOf(listOf<ShoppingItem>()) }
+){
+    var sItems by remember{ mutableStateOf(listOf<ShoppingItem>()) }
     var showDialog by remember { mutableStateOf(false) }
-    var itemName by remember { mutableStateOf("") }
-    var itemQuantity by remember { mutableStateOf("") }
-
-
+    var itemName  by remember { mutableStateOf("")}
+    var itemQuantity  by remember { mutableStateOf("")}
 
     val requestPermissionLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.RequestMultiplePermissions() ,
@@ -96,56 +96,76 @@ fun ShoppingListApp(
 
 
     Column(
-        modifier = Modifier.fillMaxSize(),
+        modifier= Modifier.fillMaxSize(),
         verticalArrangement = Arrangement.Center
-    ) {
+    ){
         Button(
-            onClick = { showDialog = true },
+            onClick = { showDialog = true},
             modifier = Modifier.align(Alignment.CenterHorizontally)
-        ) {
+        ){
             Text("Add Item")
         }
         LazyColumn(
-            modifier = Modifier
+            modifier= Modifier
                 .fillMaxSize()
                 .padding(16.dp)
-        ) {
-            items(sItems) {
-                ShoppingListItem(it, {}, {})
+        ){
+            items(sItems){
+                    item ->
+                if(item.isEditing){
+                    ShoppingItemEditor(item = item, onEditComplete = {
+                            editedName, editedQuantity ->
+                        sItems = sItems.map{ it.copy(isEditing = false)}
+                        val editedItem = sItems.find{ it.id == item.id}
+                        editedItem?.let {
+                            it.name = editedName
+                            it.quantity = editedQuantity
+                            it.address = address
+                        }
+                    })
+                }else{
+                    ShoppingListItem(item = item ,
+                        onEditClick = {
+                            // finding out which item we are editing and changing is "isEditing boolean" to true
+                            sItems = sItems.map{it.copy(isEditing = it.id==item.id )}
+                        },
+                        onDeleteClick = {
+                            sItems = sItems-item
+                        })
+                }
             }
         }
     }
 
-    if (showDialog) {
-        AlertDialog(onDismissRequest = { showDialog = false },
+    if(showDialog){
+        AlertDialog(onDismissRequest = { showDialog=false },
             confirmButton = {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(8.dp),
-                    horizontalArrangement = Arrangement.SpaceBetween
-                ) {
+                Row(modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(8.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween){
                     Button(onClick = {
-                        if (itemName.isNotBlank()) {
+                        if(itemName.isNotBlank()){
                             val newItem = ShoppingItem(
-                                id = sItems.size + 1,
+                                id= sItems.size+1,
                                 name = itemName,
-                                quantity = itemQuantity.toInt()
+                                quantity = itemQuantity.toInt(),
+                                address = address
                             )
                             sItems = sItems + newItem
                             showDialog = false
                             itemName = ""
                         }
-                    }) {
+                    }){
                         Text("Add")
                     }
-                    Button(onClick = { showDialog = false }) {
+                    Button(onClick = {showDialog = false}){
                         Text("Cancel")
                     }
                 }
 
             },
-            title = { Text("Add Shopping Item") },
+            title = { Text("Add Shopping Item")},
             text = {
                 Column {
                     OutlinedTextField(
@@ -166,9 +186,9 @@ fun ShoppingListApp(
                             .padding(8.dp)
                     )
                     Button(onClick = {
-                        if (locationUtils.hasLocationPermission(context)) {
+                        if(locationUtils.hasLocationPermission(context)){
                             locationUtils.requestLocationUpdates(viewModel)
-                            navController.navigate("locationscreen") {
+                            navController.navigate("locationscreen"){
                                 this.launchSingleTop
                             }
                         }else{
@@ -183,8 +203,57 @@ fun ShoppingListApp(
                 }
             }
         )
+
     }
+
 }
+
+
+@Composable
+fun ShoppingItemEditor(item: ShoppingItem, onEditComplete: (String, Int) -> Unit){
+    var editedName by remember { mutableStateOf(item.name) }
+    var editedQuantity by remember { mutableStateOf(item.quantity.toString()) }
+    var isEditing by remember { mutableStateOf(item.isEditing) }
+
+    Row(modifier = Modifier
+        .fillMaxWidth()
+        .background(Color.White)
+        .padding(8.dp),
+        horizontalArrangement = Arrangement.SpaceEvenly
+    )
+    {
+        Column {
+            BasicTextField(
+                value= editedName,
+                onValueChange = {editedName = it},
+                singleLine = true,
+                modifier = Modifier
+                    .wrapContentSize()
+                    .padding(8.dp)
+            )
+            BasicTextField(
+                value= editedQuantity,
+                onValueChange = {editedQuantity = it},
+                singleLine = true,
+                modifier = Modifier
+                    .wrapContentSize()
+                    .padding(8.dp)
+            )
+        }
+
+        Button(
+            onClick = {
+                isEditing = false
+                onEditComplete(editedName, editedQuantity.toIntOrNull() ?: 1)
+            }
+        ){
+            Text("Save")
+        }
+    }
+
+
+}
+
 
 @Composable
 fun ShoppingListItem(
@@ -199,25 +268,19 @@ fun ShoppingListItem(
             .border(
                 border = BorderStroke(2.dp, Color(0XFF018786)),
                 shape = RoundedCornerShape(20)
-            )
+            ),
+        horizontalArrangement =  Arrangement.SpaceBetween
     ){
-        Column(modifier = Modifier
-            .weight(1f)
-            .padding(8.dp)) {
-            Row {
+        Column(modifier = Modifier.weight(1f).padding(8.dp)) {
+            Row{
                 Text(text = item.name, modifier = Modifier.padding(8.dp))
                 Text(text = "Qty: ${item.quantity}", modifier = Modifier.padding(8.dp))
             }
-            Row(modifier = Modifier.fillMaxWidth()) {
+            Row(modifier= Modifier.fillMaxWidth()){
                 Icon(imageVector = Icons.Default.LocationOn, contentDescription = null)
-                Text(text= item.address)
+                Text(text = item.address)
             }
         }
-
-
-
-
-
 
         Row(modifier = Modifier.padding(8.dp)){
             IconButton(onClick = onEditClick){
@@ -231,3 +294,14 @@ fun ShoppingListItem(
         }
     }
 }
+
+
+
+
+
+
+
+
+
+
+
