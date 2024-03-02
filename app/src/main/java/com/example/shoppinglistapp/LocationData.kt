@@ -1,7 +1,7 @@
 package com.example.shoppinglistapp
 
 data class LocationData(
-    val latitud: Double,
+    val latitude: Double,
     val longitude: Double
 )
 

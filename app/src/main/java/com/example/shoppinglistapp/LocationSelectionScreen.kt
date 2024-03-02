@@ -24,7 +24,7 @@ fun LocationSelectionScreen(
 ) {
 
     val userLocation = remember {
-        mutableStateOf(LatLng(location.latitud, location.longitude))
+        mutableStateOf(LatLng(location.latitude, location.longitude))
     }
 
     var cameraPositionState = rememberCameraPositionState{
